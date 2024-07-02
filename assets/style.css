@@ -1,0 +1,19 @@
+h1 {
+    color: blue;
+    font-size: 34px;
+}
+h2 {
+    color: #6666a0;
+    font-size: 24px;
+}
+.header-title {
+    color: #44085f;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    /* font-size: 34px; */
+}
+#my-id {
+    background-color: navy;
+    border: 1px solid black;
+}
