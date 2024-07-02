@@ -23,25 +23,28 @@ if r.status_code == 200:
     book_df.rename(columns = {"  num_pages": "num_pages"}, inplace = True)   
 else:
     print("Impossible to read the file")
-    
 
 colors = {
     'background': '#111111',
     'text': '#6666a0'
 }
 
+# Create the barplot
 fig = px.bar(book_df.head(10),
-            x = "title", 
-            y = "num_pages",
-            hover_data = "authors")
+            x = "num_pages", 
+            y = "title",
+            hover_data = "authors",
+            title = "List of 10 books from your choice",
+            height = 1000,
+            width = 900)
 
 fig.update_layout(
     plot_bgcolor=colors['background'],
     paper_bgcolor=colors['background'],
     font_color=colors['text'])
 
-fig.update_yaxes(title_text = "Number of pages")
-fig.update_xaxes(title_text = "Title")
+fig.update_yaxes(title_text = "Title")
+fig.update_xaxes(title_text = "Number of pages")
 
 # Layout of the app
 app.layout = html.Div([html.H1("Read the book", className='header-title'),
@@ -60,30 +63,43 @@ app.layout = html.Div([html.H1("Read the book", className='header-title'),
               ])
 
 # Manage the callback to catch user's choice
-# @callback(
-#     Output(component_id = 'barplot', component_property = 'figure'),
-#     Input(component_id = 'author_name', component_property = 'value'),
-#     Input(component_id = 'max_page', component_property = 'value')
-# )
+@callback(
+    Output(component_id = 'barplot', component_property = 'figure'),
+    [Input(component_id = 'author_name', component_property = 'value')],
+    [Input(component_id = 'max_page', component_property = 'value')]
+)
 
-# # Create a function to update the graph
-# def display_book(author, max_page):
-#     try:
-#         M1 = book_df["authors"].str.contains(author)
-#         M2 = book_df["num_pages"] < max_page
-#         search = book_df[M1 & M2]
+# Create a function to update the graph
+def display_book(author, max_page):
+    if author is None and max_page is None:
+        search = book_df
+    elif author is not None and max_page is None:
+        M1 = book_df["authors"].str.contains(author)
+        search = book_df[M1]
+    elif author is None and max_page is not None:
+        M2 = book_df["num_pages"] <= max_page
+        search = book_df[M2]
+    else:
+        M1 = book_df["authors"].str.contains(author)
+        M2 = book_df["num_pages"] <= max_page
+        search = book_df[M1 & M2]
     
-#     except:
-#         search = book_df
-    
-#     fig = px.bar(search.head(10),
-#                 x = "title", 
-#                 y = "num_pages",
-#                 hover_data = "authors"),
-    # fig.update_yaxes(title_text = "Number of pages"),
-    # fig.update_xaxes(title_text = "Title")
-    
-    # return fig
+    fig = px.bar(search.head(10),
+            x = "num_pages", 
+            y = "title",
+            hover_data = "authors",
+            title = "List of 10 books from your choice",
+            height = 600,
+            width = 1500)
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font_color=colors['text'])
+
+    fig.update_yaxes(title_text = "Title")
+    fig.update_xaxes(title_text = "Number of pages")
+
+    return fig
 
 # App launch
 if __name__ == '__main__':
