@@ -29,13 +29,12 @@ fig = px.bar(book_df.head(10),
             x = "num_pages", 
             y = "title",
             hover_data = "authors",
-            title = "List of 10 books from your choice",
-            height = 600,
-             width = 1500)
+            title = "List of 10 books from your choice")
 
 # Colors of the background and the text in the graph
 colors = {'background': '#0f2537',
-          'text': '#df6919'}
+          'text': '#df6919',
+          'bars': '#4e5d6c'}
 
 fig.update_layout(
     plot_bgcolor=colors['background'],
@@ -82,14 +81,19 @@ app.layout = html.Div([
     
     
     html.Br(),
-    html.H4("This app will recommand you the best book to read based on your filters"),
+    dbc.Container(
+        [dbc.Row(                                                                                                   
+            dbc.Col(html.H4("This app will recommand you the best book to read based on your filters"))),
     
-    # Button for the modal
-    html.P("You can get more detail here"),
-    dbc.Button("Help", id = "open_modal", n_clicks = 0),
-    dbc.Tooltip(
-        "Bouuuuuuh you really need an explanation?!",
-        target="open_modal"),
+            # Button for the modal
+        dbc.Row(
+            dbc.Col(html.P("You can get more detail here"))),
+        dbc.Row(
+            dbc.Col(dbc.Button("Help", id = "open_modal", n_clicks = 0))),
+        dbc.Row(
+            dbc.Col(dbc.Tooltip(
+                "Bouuuuuuh you really need an explanation?!",
+                target="open_modal")))]),
     
     # Modal
     dbc.Modal([
@@ -103,17 +107,33 @@ app.layout = html.Div([
 
     html.Br(),
     html.Br(),
-    html.H5("Filters"),
-    html.P("Enter the author's name"),
-    dcc.Input(id = 'author_name',
-                type = "text"),
-    html.P("Enter the maximum pages in the book"),
-    dcc.Input(id = 'max_page',
-                type = 'number'),
-    html.Br(),
-    dcc.Graph(figure = fig, 
-    id = 'barplot')
-                ])
+    dbc.Container([
+        dbc.Row(
+            dbc.Col(html.H5("Filters"))),
+        dbc.Row([
+            dbc.Col(
+                [html.P("Enter the author's name"),
+                     dcc.Input(id = 'author_name',
+                               type = "text")],
+                width=3, id = "col1"),
+            dbc.Col([
+                html.P("Enter the maximum pages in the book"),
+                     dcc.Input(id = 'max_page',
+                               type = 'number')],
+                width=3, id = "col2")
+        ]),
+        dbc.Row([html.Br(),
+                 dcc.Graph(figure = fig,
+                           id = 'barplot',
+                           style={'width': '100%'})
+                 ])
+        ])
+    ])
+
+    # html.Br(),
+    # dcc.Graph(figure = fig, 
+    # id = 'barplot')
+    #             ])
 
 #####################################################################################################################################
 # Callback for the modal
@@ -156,12 +176,16 @@ def display_book(author, max_page):
             y = "title",
             hover_data = "authors",
             title = "List of 10 books from your choice",
-            height = 600,
-            width = 1500)
+            color_discrete_sequence = [colors['bars']]*10,
+            height = 600
+            # width = 1000
+            )
     fig.update_layout(
-        plot_bgcolor=colors['background'],
-        paper_bgcolor=colors['background'],
-        font_color=colors['text'])
+        plot_bgcolor = colors['background'],
+        paper_bgcolor = colors['background'],
+        font_color = colors['text'],
+        modebar_color = colors['text'],
+        hoverlabel_bgcolor = colors['bars'])
 
     fig.update_yaxes(title_text = "Title")
     fig.update_xaxes(title_text = "Number of pages")
