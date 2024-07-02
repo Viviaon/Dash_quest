@@ -2,15 +2,13 @@ import pandas as pd
 
 import requests
 
-from dash import Dash, html, dcc, Input, Output, dash_table, callback
+from dash import Dash, html, dcc, Input, Output, State, dash_table, callback
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
 import plotly.express as px
 
-# App creation
-app = Dash(__name__)
-
+#####################################################################################################################################
 # Creation of the dataframe
 link = "https://raw.githubusercontent.com/chriszapp/datasets/main/books.csv"
 
@@ -24,19 +22,20 @@ if r.status_code == 200:
 else:
     print("Impossible to read the file")
 
-colors = {
-    'background': '#111111',
-    'text': '#6666a0'
-}
-
+#####################################################################################################################################
 # Create the barplot
+
 fig = px.bar(book_df.head(10),
             x = "num_pages", 
             y = "title",
             hover_data = "authors",
             title = "List of 10 books from your choice",
-            height = 1000,
-            width = 900)
+            height = 600,
+             width = 1500)
+
+# Colors of the background and the text in the graph
+colors = {'background': '#0f2537',
+          'text': '#df6919'}
 
 fig.update_layout(
     plot_bgcolor=colors['background'],
@@ -46,35 +45,103 @@ fig.update_layout(
 fig.update_yaxes(title_text = "Title")
 fig.update_xaxes(title_text = "Number of pages")
 
-# Layout of the app
-app.layout = html.Div([html.H1("Read the book", className='header-title'),
-                       html.H2("The only book", className='header-title'),
-                       html.P("Please enter an author",
-                              style={'color': '#6666a0'}),
-                       dcc.Input(id = 'author_name',
-                                 type = "text"),
-                       html.P("Please enter a max page number",
-                              style={'color': '#6666a0'}),
-                       dcc.Input(id = 'max_page',
-                                 type = 'number'),
-                       html.P(""),
-              dcc.Graph(figure = fig, 
-                        id = 'barplot')
-              ])
+#####################################################################################################################################
+# App creation
+app = Dash(__name__, external_stylesheets=[dbc.themes.SUPERHERO])
 
+
+#####################################################################################################################################
+# Layout of the app
+app.layout = html.Div([
+    
+    ################################################# Nav Bar ################################################################
+    dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("Page 1", href="#")),
+            dbc.DropdownMenu(
+                children=[
+                    dbc.DropdownMenuItem("More to come", header=True),
+                    dbc.DropdownMenuItem("Page 2", href="#"),
+                ],
+                nav=True,
+                in_navbar=True,
+                label="Droplist",
+            ),
+        ],
+        brand="Book Selector",
+        brand_href="#",
+        color="primary",
+        dark=True,
+    ),
+    
+    # Header
+    html.Br(style={"line-height": "5"}),
+    html.H1("Read the book", className='header-title', style = {"textAlign": "center"}),
+    html.Br(style={"line-height": "5"}),
+    html.H2("The only book", className='header-title', style = {"textAlign": "center"}),
+    
+    
+    html.Br(),
+    html.H4("This app will recommand you the best book to read based on your filters"),
+    
+    # Button for the modal
+    html.P("You can get more detail here"),
+    dbc.Button("Help", id = "open_modal", n_clicks = 0),
+    dbc.Tooltip(
+        "Bouuuuuuh you really need an explanation?!",
+        target="open_modal"),
+    
+    # Modal
+    dbc.Modal([
+        dbc.ModalHeader("Filters"),
+        dbc.ModalBody("You can filter the selection by author entering the name of the author you want."),
+        dbc.ModalBody("You can also modify the selection based on the max pages number of the book."),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close_modal", className="ml-auto")
+        ),
+        ], id="modal", is_open=False),
+
+    html.Br(),
+    html.Br(),
+    html.H5("Filters"),
+    html.P("Enter the author's name"),
+    dcc.Input(id = 'author_name',
+                type = "text"),
+    html.P("Enter the maximum pages in the book"),
+    dcc.Input(id = 'max_page',
+                type = 'number'),
+    html.Br(),
+    dcc.Graph(figure = fig, 
+    id = 'barplot')
+                ])
+
+#####################################################################################################################################
+# Callback for the modal
+@callback(
+     Output("modal", "is_open"),
+    Input("open_modal", "n_clicks"), Input("close_modal", "n_clicks"),
+    [State("modal", "is_open")]
+)
+
+# Create a function to open and close the modal
+def open_and_close_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+ 
 # Manage the callback to catch user's choice
 @callback(
     Output(component_id = 'barplot', component_property = 'figure'),
-    [Input(component_id = 'author_name', component_property = 'value')],
-    [Input(component_id = 'max_page', component_property = 'value')]
+    [Input(component_id = 'author_name', component_property = 'value'),
+    Input(component_id = 'max_page', component_property = 'value')]
 )
-
-# Create a function to update the graph
+ 
+# Create a function to update the graph   
 def display_book(author, max_page):
     if author is None and max_page is None:
         search = book_df
     elif author is not None and max_page is None:
-        M1 = book_df["authors"].str.contains(author)
+        M1 = book_df["authors"].str.contains(author, case = False)
         search = book_df[M1]
     elif author is None and max_page is not None:
         M2 = book_df["num_pages"] <= max_page
@@ -101,6 +168,7 @@ def display_book(author, max_page):
 
     return fig
 
+#####################################################################################################################################
 # App launch
 if __name__ == '__main__':
     app.run_server(debug=True)
